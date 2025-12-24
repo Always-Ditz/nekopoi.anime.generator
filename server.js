@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Serve static files dari folder public
+app.use(express.static(__dirname)); // Serve frontend dari root directory
 
 // Cooldown management
 const COOLDOWN_FILE = path.join(__dirname, 'cooldown.json');
@@ -81,7 +81,7 @@ app.post('/api/generate', async (req, res) => {
 
     console.log('[Generate] Starting:', { prompt: prompt.substring(0, 50), ratio });
 
-    // Fetch dengan timeout 90 detik
+    // Fetch dengan timeout 90 detik (Railway support lama)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 90000);
 
