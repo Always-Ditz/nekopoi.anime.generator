@@ -1,10 +1,42 @@
-import { kv } from '@vercel/kv';
+import fs from 'fs';
 
-const COOLDOWN_SECONDS = 120; // 2 menit
-const COOLDOWN_KEY = 'nekopoi_global_cooldown';
+const COOLDOWN_FILE = '/tmp/nekopoi_cooldown.json';
+const COOLDOWN_DURATION = 2 * 60 * 1000; // 2 menit dalam ms
+
+function getCooldown() {
+  try {
+    if (fs.existsSync(COOLDOWN_FILE)) {
+      const data = fs.readFileSync(COOLDOWN_FILE, 'utf8');
+      const cooldownData = JSON.parse(data);
+
+      // Kalau belum expired, return waktu expired-nya
+      if (cooldownData.until > Date.now()) {
+        return cooldownData.until;
+      } else {
+        // Udah expired, hapus file biar bersih
+        try { fs.unlinkSync(COOLDOWN_FILE); } catch {}
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Error reading cooldown file:', error);
+    return null;
+  }
+}
+
+function setCooldown() {
+  try {
+    const until = Date.now() + COOLDOWN_DURATION;
+    fs.writeFileSync(COOLDOWN_FILE, JSON.stringify({ until }), 'utf8');
+    return until;
+  } catch (error) {
+    console.error('Error writing cooldown file:', error);
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
-  // CORS headers
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -24,48 +56,76 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Cek cooldown global
-    const lastTime = await kv.get(COOLDOWN_KEY);
+    // Cek cooldown
+    const cooldownUntil = getCooldown();
 
-    if (lastTime) {
-      const now = Date.now();
-      const elapsed = (now - lastTime) / 1000;
-      const remaining = Math.max(0, COOLDOWN_SECONDS - Math.floor(elapsed));
+    if (cooldownUntil) {
+      const remainingMs = cooldownUntil - Date.now();
+      const remainingSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
 
-      if (remaining > 0) {
-        return res.status(429).json({
-          error: 'Cooldown aktif',
-          message: `Generate baru bisa dilakukan lagi dalam ${remaining} detik.`,
-          remainingSeconds: remaining
-        });
-      }
+      return res.status(429).json({
+        error: 'Cooldown aktif',
+        message: `Generate baru bisa lagi dalam ${remainingSeconds} detik ya bro!`,
+        remainingSeconds,
+      });
     }
 
-    // Panggil API Nekolabs
-    const apiUrl = `https://api.nekolabs.web.id/img.gen/wai-nsfw-illustrous/v12?prompt=\( {encodeURIComponent(prompt.trim())}&ratio= \){encodeURIComponent(ratio)}`;
+    // Build URL dengan benar (ini yang sebelumnya error parah)
+    const encodedPrompt = encodeURIComponent(prompt.trim());
+    const encodedRatio = encodeURIComponent(ratio);
+    const apiUrl = `https://api.nekolabs.web.id/img.gen/wai-nsfw-illustrous/v12?prompt=\( {encodedPrompt}&ratio= \){encodedRatio}`;
 
-    const response = await fetch(apiUrl, { timeout: 30000 });
+    // Fetch dengan timeout aman
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 detik
+
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      console.error('Nekolabs API error:', response.status, errText);
+      return res.status(502).json({
+        error: 'Gagal hubungi API Nekolabs',
+        status: response.status,
+      });
+    }
+
     const data = await response.json();
 
     if (!data.success || !data.result) {
       return res.status(500).json({
-        error: 'Gagal generate dari API',
-        details: data
+        error: 'Generate gagal dari API',
+        details: data,
       });
     }
 
-    // Set cooldown baru setelah sukses
-    await kv.set(COOLDOWN_KEY, Date.now(), { ex: COOLDOWN_SECONDS });
+    // Set cooldown baru SETELAH sukses generate
+    setCooldown();
 
     return res.status(200).json({
       success: true,
       imageUrl: data.result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ error: 'Timeout ke API Nekolabs' });
+    }
+
     console.error('Generate error:', error);
-    return res.status(500).json({ error: 'Server error', message: error.message });
+    return res.status(500).json({
+      error: 'Server error',
+      message: error.message || 'Unknown error',
+    });
   }
 }
 
