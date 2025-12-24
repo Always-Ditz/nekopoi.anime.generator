@@ -1,10 +1,18 @@
 {
-  "name": "nekopoi-generator",
+  "name": "nekopoi-waifu-generator",
   "version": "1.0.0",
-  "private": true,
+  "description": "Anime Waifu Generator API",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
-  "dependencies": {}
+  "keywords": ["anime", "waifu", "ai"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
 }
