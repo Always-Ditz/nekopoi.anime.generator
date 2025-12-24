@@ -53,7 +53,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Cek cooldown
     const cooldownUntil = getCooldown();
     if (cooldownUntil) {
       const remainingSeconds = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
@@ -64,15 +63,15 @@ export default async function handler(req, res) {
       });
     }
 
-    // FIX URL DI SINI - INI YANG BENER!
+    // FIX INI BRO: ratio ga diencode!
     const encodedPrompt = encodeURIComponent(prompt.trim());
-    const encodedRatio = encodeURIComponent(ratio);
-    const apiUrl = `https://api.nekolabs.web.id/img.gen/wai-nsfw-illustrous/v12?prompt=\( {encodedPrompt}&ratio= \){encodedRatio}`;
+    const rawRatio = ratio.trim(); // biarin ':' asli
+    const apiUrl = `https://api.nekolabs.web.id/img.gen/wai-nsfw-illustrous/v12?prompt=\( {encodedPrompt}&ratio= \){rawRatio}`;
 
-    // Contoh URL yang dihasilkan: ...?prompt=Hinata%20Naruto&ratio=1%3A1 → PASTI JALAN
+    // Contoh URL jadi: ?prompt=Hinata%20Naruto&ratio=1:1 → sukses 100%
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 detik, generate lama
 
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -84,8 +83,8 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errText = await response.text().catch(() => '');
-      console.error('API Error:', response.status, errText);
-      return res.status(502).json({ error: 'Gagal hubungi Nekolabs', status: response.status });
+      console.error('Nekolabs Error:', response.status, errText);
+      return res.status(502).json({ error: 'Gagal hubungi Nekolabs', details: errText });
     }
 
     const data = await response.json();
@@ -94,7 +93,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Generate gagal', details: data });
     }
 
-    // Set cooldown setelah sukses
     setCooldown();
 
     return res.status(200).json({
@@ -105,7 +103,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     if (error.name === 'AbortError') {
-      return res.status(504).json({ error: 'Timeout ke API Nekolabs' });
+      return res.status(504).json({ error: 'Generate timeout, coba prompt lebih sederhana' });
     }
     console.error('Error:', error);
     return res.status(500).json({ error: 'Server error', message: error.message });
