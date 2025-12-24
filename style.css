@@ -316,26 +316,28 @@ select {
   overflow: hidden;
 }
 
+/* Button Download - Hijau Calm */
 .btn-download {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
   color: white;
 }
 
 .btn-download:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(79, 172, 254, 0.5);
-  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.5);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
+/* Button Reset - Ungu */
 .btn-reset {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
   color: white;
 }
 
 .btn-reset:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(245, 87, 108, 0.5);
-  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
 }
 
 .hidden {
@@ -397,4 +399,4 @@ select {
     padding: 15px 32px;
     font-size: 1.05rem;
   }
-}
+  }
