@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nekopoi Anime Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Nekopoi Anime Generator</h1>
+    <p class="subtitle">Generate anime illustration dengan AI (NSFW allowed)</p>
+
+    <div class="input-group">
+      <input type="text" id="prompt" placeholder="Masukkan prompt, contoh: Girl show boobs" value="Girl show boobs" />
+      <select id="ratio">
+        <option value="1:1">1:1 (Square)</option>
+        <option value="9:16">9:16 (Portrait)</option>
+        <option value="16:9">16:9 (Landscape)</option>
+      </select>
+    </div>
+
+    <button id="generateBtn" class="btn-primary">Generate</button>
+
+    <div id="loading" class="loading hidden">
+      <p>Sedang generating... (bisa sampai 15-20 detik)</p>
+    </div>
+
+    <div id="result" class="result hidden">
+      <img id="generatedImage" alt="Generated Anime" />
+      <div class="actions">
+        <button id="downloadBtn" class="btn-download">Download</button>
+        <button id="resetBtn" class="btn-reset">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
