@@ -41,7 +41,7 @@ generateBtn.addEventListener('click', async () => {
 
       alert(
         `⏳ Cooldown Global Aktif Bro!\n\n` +
-        `Tunggu \( {minutes > 0 ? minutes + ' menit ' : ''} \){seconds} detik lagi ya.\n` +
+        `Tunggu ${minutes > 0 ? minutes + ' menit ' : ''}${seconds} detik lagi ya.\n` +
         `Ini berlaku buat semua user bareng-bareng. Sabar dulu! 😅`
       );
       return;
