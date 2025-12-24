@@ -63,15 +63,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // FIX INI BRO: ratio ga diencode!
     const encodedPrompt = encodeURIComponent(prompt.trim());
-    const rawRatio = ratio.trim(); // biarin ':' asli
-    const apiUrl = `https://api.nekolabs.web.id/img.gen/wai-nsfw-illustrous/v12?prompt=\( {encodedPrompt}&ratio= \){rawRatio}`;
-
-    // Contoh URL jadi: ?prompt=Hinata%20Naruto&ratio=1:1 → sukses 100%
+    const rawRatio = ratio.trim();
+    const apiUrl = `https://api.nekolabs.web.id/img.gen/wai-nsfw-illustrous/v12?prompt=${encodedPrompt}&ratio=${rawRatio}`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 detik, generate lama
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     const response = await fetch(apiUrl, {
       method: 'GET',
